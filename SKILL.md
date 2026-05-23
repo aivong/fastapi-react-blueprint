@@ -43,7 +43,7 @@ We have aggressively integrated specialized skills to enforce a titanium-clad co
 *   **`alembic-safe-migrations`**: Enforces strict database migration rules: always implement `downgrade()`, add columns as `nullable` first to avoid locking, and separate data migrations from schema migrations.
 
 ### API & Application Architecture
-*   **`hexagonal-architecture`**: Enforces a strict Ports and Adapters architecture to completely decouple the core Domain orchestrator logic from Infrastructure concerns (like underlying LLM SDKs, Databases, and external APIs). This guarantees that agent frameworks remain hot-swappable via Adapters, and enables robust, behavior-driven integration testing using Fakes instead of brittle mocks.
+*   **`hexagonal-architecture`**: Enforces a strict Ports and Adapters architecture to completely decouple core Domain logic from Infrastructure concerns (like Databases, third-party APIs, and external services). This guarantees that all external dependencies remain hot-swappable via Adapters, and enables robust, behavior-driven integration testing using Fakes instead of brittle mocks.
 *   **`twelve-factor`**: Enforces stateless execution and Graceful Shutdowns. The orchestrator must intercept `SIGINT`/`SIGTERM` to safely close active agent sub-processes.
 *   **`api-design`**: Enforces strict REST semantics and standardized RFC 9457 error shapes across all FastAPI endpoints.
 *   **OpenAPI Autogeneration (`openapi-typescript`)**: Enforces 100% type safety across the frontend/backend boundary. Instead of brittle, manual interface definitions, the React frontend must generate its schemas directly from FastAPI's `/openapi.json` to prevent schema drift and catch API contract breakages at compile-time.
