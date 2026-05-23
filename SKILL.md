@@ -31,7 +31,7 @@ This skill encapsulates a curated set of design decisions for building modern, a
 | Technology | Purpose | Why We Chose It |
 |---|---|---|
 | **Python (FastAPI)** | Backend & Orchestrator Daemon | Python is the standard for AI/agentic tooling. FastAPI provides immense speed, asynchronous support, and native OpenAPI/Swagger generation. |
-| **Python Tooling (Ruff, Mypy, Ty)** | Static Analysis & Execution | We enforce `ruff` for lightning-fast linting/formatting, `mypy --strict` for bulletproof type checking, and `ty` for executing Python scripts with strict type validation. |
+| **Astral Tooling (Ruff, UV)** | Static Analysis & Execution | We enforce `ruff` for lightning-fast linting and formatting, and `uv` for lightning-fast package management and script execution. We exclusively use Astral tooling for the Python ecosystem. |
 | **Latest Node.js LTS (via nvm)** | Frontend Dashboard | Remix/React Router provides a robust SPA architecture. We mandate using **nvm** to manage Node versions locally and enforce using the **latest Node.js LTS version** (e.g., v24, v26, etc.) for all frontend compilation. |
 | **PostgreSQL & SQLModel** | Database Persistence | PostgreSQL is the most robust open-source relational database. SQLModel (by the creator of FastAPI) combines SQLAlchemy 2.0 and Pydantic into a single class, eliminating the need to duplicate schemas for the API and the Database. |
 | **Testcontainers** | Spec-Driven Acceptance Tests | Allows us to spin up isolated PostgreSQL databases and FastAPI servers in Docker containers during testing, ensuring zero state bleeding between tests. |
@@ -67,7 +67,7 @@ We have aggressively integrated specialized skills to enforce a titanium-clad co
 
 We aggressively shift left to eliminate manual testing, employing a 5-tier pyramid:
 
-1. **Tier 0: Static Analysis (Pre-Test)**: Use `mypy --strict` and `ruff` to catch type mismatches and logical flaws before tests even execute.
+1. **Tier 0: Static Analysis (Pre-Test)**: Use `ruff` to catch logical flaws and enforce formatting before tests even execute.
 2. **Tier 1: Unit & Mutation Tests**: Write fast, isolated tests for Domain logic using strict TDD. Crucially, run **Mutation Testing (`mutmut`)** against this tier to prove the test suite actually catches injected bugs. (Note: use relative/direct imports `from models import Issue` rather than `src.models` to prevent `mutmut` namespace bugs).
 3. **Tier 2: Contract Tests (Schema Validation)**: Never guess if an external API changed. For GraphQL APIs, extract queries into shared `.graphql` files (treated as immutable source code, never Application State) and use the frontend's `@graphql-codegen/cli` to validate them against the live production schema during CI.
 4. **Tier 3: Component Integration (Testcontainers & Fakes)**: Test infrastructure adapters using real backing services. Use `testcontainers-python` to spin up ephemeral PostgreSQL databases. For external APIs, **build Fakes instead of Mocks** using `respx`. Fakes maintain in-memory state dictionaries and test the *behavior* of the orchestrator, unlike brittle mocks that only assert `called_with()`.
