@@ -18,7 +18,7 @@ This skill encapsulates a curated set of design decisions for building modern, a
 | Technology | Purpose | Why We Chose It |
 |---|---|---|
 | **Python (FastAPI)** | Backend & Orchestrator Daemon | Python is the standard for AI/agentic tooling (like `antigravity`). FastAPI provides immense speed, asynchronous support, and native OpenAPI/Swagger generation. |
-| **Node.js 24.x LTS (via nvm)** | Frontend Dashboard | Remix/React Router provides a robust SPA architecture. We mandate using **nvm** to manage Node versions locally and enforce **Node.js 24.x LTS** for all frontend compilation. |
+| **Latest Node.js LTS (via nvm)** | Frontend Dashboard | Remix/React Router provides a robust SPA architecture. We mandate using **nvm** to manage Node versions locally and enforce using the **latest Node.js LTS version** (e.g., v24, v26, etc.) for all frontend compilation. |
 | **PostgreSQL & SQLModel** | Database Persistence | PostgreSQL is the most robust open-source relational database. SQLModel (by the creator of FastAPI) combines SQLAlchemy 2.0 and Pydantic into a single class, eliminating the need to duplicate schemas for the API and the Database. |
 | **Testcontainers** | Spec-Driven Acceptance Tests | Allows us to spin up isolated PostgreSQL databases and FastAPI servers in Docker containers during testing, ensuring zero state bleeding between tests. |
 | **PyInstaller (Optional: Inno Setup)** | Cross-Platform Distribution | Bundles the entire Python daemon, dependencies, and React static assets into a single native binary (macOS/Linux/Windows) for non-technical users. Windows builds can optionally use Inno Setup to compile a professional `.exe` setup wizard. |
