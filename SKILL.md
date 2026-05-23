@@ -43,19 +43,23 @@ We have aggressively integrated specialized skills to enforce a titanium-clad co
 *   **`alembic-safe-migrations`**: Enforces strict database migration rules: always implement `downgrade()`, add columns as `nullable` first to avoid locking, and separate data migrations from schema migrations.
 
 ### API & Application Architecture
+*   **`hexagonal-architecture`**: Enforces a strict Ports and Adapters architecture to completely decouple the core Domain orchestrator logic from Infrastructure concerns (like underlying LLM SDKs, Databases, and external APIs). This guarantees that agent frameworks remain hot-swappable via Adapters, and enables robust, behavior-driven integration testing using Fakes instead of brittle mocks.
 *   **`twelve-factor`**: Enforces stateless execution and Graceful Shutdowns. The orchestrator must intercept `SIGINT`/`SIGTERM` to safely close active agent sub-processes.
 *   **`api-design`**: Enforces strict REST semantics and standardized RFC 9457 error shapes across all FastAPI endpoints.
 *   **OpenAPI Autogeneration (`openapi-typescript`)**: Enforces 100% type safety across the frontend/backend boundary. Instead of brittle, manual interface definitions, the React frontend must generate its schemas directly from FastAPI's `/openapi.json` to prevent schema drift and catch API contract breakages at compile-time.
 *   **`frontend-design`**: Enforces an "Industrial / Utilitarian Control Panel" aesthetic using Tailwind v4 and shadcn/ui.
 
-### Testing & Quality Assurance
+### Testing & Quality Assurance: The 5-Tier "Shift Left" Pyramid
 
-1. **Test-Driven Development (TDD)**: ALL code must be written using strict Red-Green-Refactor cycles.
-2. **Early E2E Smoke Tests**: Write a Playwright E2E smoke test *immediately* after wiring up the frontend-to-backend proxy. This catches fundamental Docker networking and Vite host-mapping issues before asking the user to manually verify the UI.
-3. **OpenAPI Contract Safety**: Do not manually write frontend API clients or TypeScript types. Use `openapi-typescript` to autogenerate types from FastAPI's OpenAPI schema, and `openapi-fetch` to ensure compile-time contract safety.
-4. **Chaos Testing (Graceful Degradation)**: Use the `respx` library to intentionally simulate catastrophic upstream failures (502 Bad Gateway, 504 Gateway Timeout) from external dependencies. **Critical**: When testing FastAPI apps with `respx`, avoid `TestClient` (which spawns isolated threads that break `respx` contextvars). Instead, run async tests using `httpx.AsyncClient(transport=httpx.ASGITransport(app=app))`.
-5. **Visual Regression Testing (VRT)**: Use Playwright's `.toHaveScreenshot()` to capture pixel-perfect baselines of critical UI components to catch CSS regressions during refactors.
-6. **Mutation Testing**: Use `mutmut` to verify the strength of the test suite. **Critical Lesson (The Pythonic Refactor)**: Avoid using the `src.` prefix in Python imports (e.g. do not use `from src.models import Issue`). Instead, use relative or direct imports (`from models import Issue`) and append `src` to the `PYTHONPATH`. This prevents `mutmut` from crashing due to namespace package compilation bugs. Note that running mutation tests that rely on `testcontainers` from inside a Docker container requires mounting `/var/run/docker.sock`.
+We aggressively shift left to eliminate manual testing, employing a 5-tier pyramid:
+
+1. **Tier 0: Static Analysis (Pre-Test)**: Use `mypy --strict` and `ruff` to catch type mismatches and logical flaws before tests even execute.
+2. **Tier 1: Unit & Mutation Tests**: Write fast, isolated tests for Domain logic using strict TDD. Crucially, run **Mutation Testing (`mutmut`)** against this tier to prove the test suite actually catches injected bugs. (Note: use relative/direct imports `from models import Issue` rather than `src.models` to prevent `mutmut` namespace bugs).
+3. **Tier 2: Contract Tests (Schema Validation)**: Never guess if an external API changed. For GraphQL APIs, extract queries into shared `.graphql` files (treated as immutable source code, never Application State) and use the frontend's `@graphql-codegen/cli` to validate them against the live production schema during CI.
+4. **Tier 3: Component Integration (Testcontainers & Fakes)**: Test infrastructure adapters using real backing services. Use `testcontainers-python` to spin up ephemeral PostgreSQL databases. For external APIs, **build Fakes instead of Mocks** using `respx`. Fakes maintain in-memory state dictionaries and test the *behavior* of the orchestrator, unlike brittle mocks that only assert `called_with()`.
+5. **Tier 4: Automated E2E System Tests**: Programmatically execute the entire orchestrator loop and mathematically assert the outcomes (e.g., executing the agent's generated code via `subprocess` to prove it runs) to completely eliminate manual UI verification.
+
+*Note on Playwright*: Write an E2E smoke test *immediately* after wiring up the frontend-to-backend proxy to catch fundamental Docker networking issues. Use `.toHaveScreenshot()` with dynamic masks for Visual Regression Testing (VRT).
 
 ### Documentation & Demonstration
 *   **`excalidraw-diagram`**: Used to generate isomorphic visual arguments (system architecture diagrams) that are saved directly to version control.
