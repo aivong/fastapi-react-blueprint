@@ -7,6 +7,19 @@ tags:
   - blueprint
   - stack
   - skills
+dependencies:
+  - karpathy-guidelines
+  - owasp-secure-coding
+  - varlock
+  - shannon
+  - postgres-best-practices
+  - alembic-safe-migrations
+  - hexagonal-architecture
+  - twelve-factor
+  - api-design
+  - frontend-design
+  - excalidraw-diagram
+  - remotion-best-practices
 ---
 
 # Modern Stack Architecture & Design Decisions
