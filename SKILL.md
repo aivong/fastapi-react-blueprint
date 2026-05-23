@@ -21,7 +21,7 @@ This skill encapsulates a curated set of design decisions for building modern, a
 | **Node.js (Remix SPA)** | Frontend Dashboard | Remix provides a robust routing architecture. Building it as a Single Page Application (SPA) allows us to serve the entire compiled bundle directly from FastAPI without needing a separate Node.js production server. |
 | **PostgreSQL & SQLModel** | Database Persistence | PostgreSQL is the most robust open-source relational database. SQLModel (by the creator of FastAPI) combines SQLAlchemy 2.0 and Pydantic into a single class, eliminating the need to duplicate schemas for the API and the Database. |
 | **Testcontainers** | Spec-Driven Acceptance Tests | Allows us to spin up isolated PostgreSQL databases and FastAPI servers in Docker containers during testing, ensuring zero state bleeding between tests. |
-| **PyInstaller & Inno Setup** | Windows Distribution | Bundles the entire Python daemon, dependencies, and React static assets into a single, professional `.exe` installer for non-technical users. |
+| **PyInstaller (Optional: Inno Setup)** | Cross-Platform Distribution | Bundles the entire Python daemon, dependencies, and React static assets into a single native binary (macOS/Linux/Windows) for non-technical users. Windows builds can optionally use Inno Setup to compile a professional `.exe` setup wizard. |
 | **Docker Compose** | Local Orchestration | Provides an easy `docker compose up` command to launch the database, API, and frontend simultaneously for local development. |
 
 ## 2. Integrated Skills & Rationale
