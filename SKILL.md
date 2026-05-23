@@ -1,5 +1,5 @@
 ---
-name: modern-stack-blueprint
+name: fastapi-react-blueprint
 version: "1.0.0"
 description: "The definitive architectural blueprint, design decisions, and skill stack for building modern, secure, and production-ready Python/React applications."
 tags:
@@ -45,12 +45,17 @@ We have aggressively integrated specialized skills to enforce a titanium-clad co
 ### API & Application Architecture
 *   **`twelve-factor`**: Enforces stateless execution and Graceful Shutdowns. The orchestrator must intercept `SIGINT`/`SIGTERM` to safely close active agent sub-processes.
 *   **`api-design`**: Enforces strict REST semantics and standardized RFC 9457 error shapes across all FastAPI endpoints.
+*   **OpenAPI Autogeneration (`openapi-typescript`)**: Enforces 100% type safety across the frontend/backend boundary. Instead of brittle, manual interface definitions, the React frontend must generate its schemas directly from FastAPI's `/openapi.json` to prevent schema drift and catch API contract breakages at compile-time.
 *   **`frontend-design`**: Enforces an "Industrial / Utilitarian Control Panel" aesthetic using Tailwind v4 and shadcn/ui.
 
-### Testing & Verification
-*   **`tdd` & `testing`**: Test-Driven Development is non-negotiable. Red → Green → Refactor. A minimum of 90% test coverage is strictly enforced across the codebase.
-*   **`mutation-testing`**: We use `mutmut` to artificially inject bugs into our codebase to ensure our test suite is actually strong enough to catch them (the "KILL MUTANTS" phase).
-*   **`front-end-testing` & `webapp-testing`**: Playwright is used for end-to-end frontend integration tests that aren't brittle.
+### Testing & Quality Assurance
+
+1. **Test-Driven Development (TDD)**: ALL code must be written using strict Red-Green-Refactor cycles.
+2. **Early E2E Smoke Tests**: Write a Playwright E2E smoke test *immediately* after wiring up the frontend-to-backend proxy. This catches fundamental Docker networking and Vite host-mapping issues before asking the user to manually verify the UI.
+3. **OpenAPI Contract Safety**: Do not manually write frontend API clients or TypeScript types. Use `openapi-typescript` to autogenerate types from FastAPI's OpenAPI schema, and `openapi-fetch` to ensure compile-time contract safety.
+4. **Chaos Testing (Graceful Degradation)**: Use the `respx` library to intentionally simulate catastrophic upstream failures (502 Bad Gateway, 504 Gateway Timeout) from external dependencies. **Critical**: When testing FastAPI apps with `respx`, avoid `TestClient` (which spawns isolated threads that break `respx` contextvars). Instead, run async tests using `httpx.AsyncClient(transport=httpx.ASGITransport(app=app))`.
+5. **Visual Regression Testing (VRT)**: Use Playwright's `.toHaveScreenshot()` to capture pixel-perfect baselines of critical UI components to catch CSS regressions during refactors.
+6. **Mutation Testing**: Use `mutmut` to verify the strength of the test suite. **Critical Lesson (The Pythonic Refactor)**: Avoid using the `src.` prefix in Python imports (e.g. do not use `from src.models import Issue`). Instead, use relative or direct imports (`from models import Issue`) and append `src` to the `PYTHONPATH`. This prevents `mutmut` from crashing due to namespace package compilation bugs. Note that running mutation tests that rely on `testcontainers` from inside a Docker container requires mounting `/var/run/docker.sock`.
 
 ### Documentation & Demonstration
 *   **`excalidraw-diagram`**: Used to generate isomorphic visual arguments (system architecture diagrams) that are saved directly to version control.
