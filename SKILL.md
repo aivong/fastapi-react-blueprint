@@ -36,7 +36,7 @@ This skill encapsulates a curated set of design decisions for building modern, a
 | **PostgreSQL & SQLModel** | Database Persistence | PostgreSQL is the most robust open-source relational database. **Always use the latest stable major version** (e.g., `postgres:18-alpine`). SQLModel (by the creator of FastAPI) combines SQLAlchemy 2.0 and Pydantic into a single class, eliminating the need to duplicate schemas for the API and the Database. |
 | **Testcontainers** | Spec-Driven Acceptance Tests | Allows us to spin up isolated PostgreSQL databases and FastAPI servers in Docker containers during testing, ensuring zero state bleeding between tests. |
 | **PyInstaller (Optional: Inno Setup)** | Cross-Platform Distribution | Bundles the entire Python daemon, dependencies, and React static assets into a single native binary (macOS/Linux/Windows) for non-technical users. Windows builds can optionally use Inno Setup to compile a professional `.exe` setup wizard. |
-| **Docker Compose** | Local Orchestration | Provides an easy `docker compose up` command to launch the database, API, and frontend simultaneously for local development. |
+| **Docker Compose & Make** | Local Developer Experience (DX) | We enforce `docker-compose.yml` profiles (`profiles: ["full"]`) so that `docker compose up -d` only provisions the database. We use a `Makefile` to abstract the DX: `make dev` uses `npx concurrently` to boot the database and stream both the native Python and React hot-reloading servers in a single, unified terminal. |
 
 ## 2. Integrated Skills & Rationale
 
