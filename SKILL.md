@@ -33,7 +33,7 @@ This skill encapsulates a curated set of design decisions for building modern, a
 | **Python (FastAPI)** | Backend & Orchestrator Daemon | Python is the standard for AI/agentic tooling. FastAPI provides immense speed, asynchronous support, and native OpenAPI/Swagger generation. |
 | **Astral Tooling (Ruff, UV, Ty)** | Static Analysis & Execution | We exclusively use Astral tooling for the Python ecosystem: `ruff` for lightning-fast linting/formatting, `uv` for package management, and `ty` for extremely fast, Rust-based static type checking. |
 | **Frontend Architecture** | **React Router v7 (SPA Mode)** | Provides a robust, lightweight frontend architecture. For **all applications** where SEO and Server-Side Rendering (SSR) are unnecessary, always initialize using React Router v7 in SPA Mode (`npx create-react-router@latest` -> SPA). This provides Remix's powerful `loader`/`action` paradigms without the heavy Node server overhead. **Tailwind v4 & shadcn/ui**: All UI components must use the `frontend-design` skill aesthetic. Tailwind v4 must be the CSS engine. |
-| **PostgreSQL & SQLModel** | Database Persistence | PostgreSQL is the most robust open-source relational database. **Always use the latest stable major version** (e.g., `postgres:18-alpine`). SQLModel (by the creator of FastAPI) combines SQLAlchemy 2.0 and Pydantic into a single class, eliminating the need to duplicate schemas for the API and the Database. |
+| **PostgreSQL & SQLModel** | Database Persistence | PostgreSQL is the most robust open-source relational database. SQLModel (by the creator of FastAPI) combines SQLAlchemy 2.0 and Pydantic into a single class, eliminating the need to duplicate schemas for the API and the Database. |
 | **Testcontainers** | Spec-Driven Acceptance Tests | Allows us to spin up isolated PostgreSQL databases and FastAPI servers in Docker containers during testing, ensuring zero state bleeding between tests. |
 | **PyInstaller (Optional: Inno Setup)** | Cross-Platform Distribution | Bundles the entire Python daemon, dependencies, and React static assets into a single native binary (macOS/Linux/Windows) for non-technical users. Windows builds can optionally use Inno Setup to compile a professional `.exe` setup wizard. |
 | **Docker Compose** | Local Orchestration | Provides an easy `docker compose up` command to launch the database, API, and frontend simultaneously for local development. |
@@ -42,11 +42,15 @@ This skill encapsulates a curated set of design decisions for building modern, a
 
 We have aggressively integrated specialized skills to enforce a titanium-clad codebase. You MUST adhere to these skills during development:
 
+### Backend Structure (FastAPI + Hexagonal + CQRS)
+*   **Composition Root Testing**: The Dependency Injection graph (the Composition Root typically found in `main.py`) MUST be encapsulated into a pure factory function (e.g., `build_daemon()`). You MUST write an integration test that simply calls this factory to mathematically assert that all positional/keyword arguments match the adapter signatures. Never leave the composition root untested.
+*   **SQLModel over SQLAlchemy**: Use SQLModel to natively blend Pydantic schemas with SQLAlchemy models.
+
 ### Core Philosophy
 *   **`karpathy-guidelines`**: **Simplicity First** and **Surgical Changes**. We write the absolute minimum code required to solve the problem. Zero speculative features. We only touch the code we must touch.
 
 ### Security & Secrets
-*   **Supply Chain Security & Freshness**: All dependencies in `pyproject.toml` and `package.json` MUST be pinned to exact versions (e.g., `fastapi==0.136.1` instead of `>=`). Lockfiles (`uv.lock`, `package-lock.json`) MUST be committed to version control to eliminate vector supply chain attacks. Additionally, you must default to using the **latest stable major version** of all backing services (e.g., Node.js LTS, PostgreSQL 18) unless explicitly constrained by the user.
+*   **Supply Chain Security**: All dependencies in `pyproject.toml` and `package.json` MUST be pinned to exact versions (e.g., `fastapi==0.136.1` instead of `>=`). Lockfiles (`uv.lock`, `package-lock.json`) MUST be committed to version control to eliminate vector supply chain attacks.
 *   **Minimal Attack Surfaces**: Always use `slim` or `alpine` variants for Docker base images (e.g., `python:3.12-slim`, `postgres:17-alpine`) to minimize footprint and reduce vulnerability exposure.
 *   **`owasp-secure-coding`**: Security is built-in by default (preventing XSS, Injection, SSRF) before code ever reaches production.
 *   **`varlock`**: Strict secret management. API keys (`LINEAR_API_KEY`) are injected via `.env` files and never logged or hardcoded.
@@ -58,10 +62,7 @@ We have aggressively integrated specialized skills to enforce a titanium-clad co
 
 ### API & Application Architecture
 *   **`hexagonal-architecture`**: Enforces a strict Ports and Adapters architecture to completely decouple core Domain logic from Infrastructure concerns (like Databases, third-party APIs, and external services). This guarantees that all external dependencies remain hot-swappable via Adapters, and enables robust, behavior-driven integration testing using Fakes instead of brittle mocks.
-*   **External API Resilience (Rate Limiting & Permissions)**: Any Infrastructure Adapter integrating with a 3rd-party external service (e.g. Linear, GitHub) MUST be resilient to misconfigurations and throttling. 
-    *   **Rate Limits:** If an API returns an HTTP 429 (Too Many Requests), the adapter must parse the `Retry-After` or rate-limit reset headers and gracefully sleep or back-off until the limit resets. Do not blindly hammer external APIs. 
-    *   **Permissions:** Prefer handling read-only or lower-permission API keys gracefully (e.g., catching HTTP 401/403 Forbidden). Instead of crashing the application on a write mutation, intercept the error, log a warning, and safely skip the action. This ensures the app doesn't fatally crash if a user misconfigures their external service permissions.
-*   **Resource Cleanup & Disk Leaks**: For code involving real file creation or physical workspaces, the application MUST implement strict cleanup mechanisms (e.g., using `try...finally` blocks) to prevent disk space leaks over time. During tests, either mathematically assert these cleanup mechanisms or utilize Pytest's built-in `tmp_path` fixture to guarantee automatic file cleanup.
+*   **External API Resilience (Rate Limiting)**: Any Infrastructure Adapter integrating with a 3rd-party external service (e.g. Linear, GitHub) MUST respect rate limits. If an API returns an HTTP 429 (Too Many Requests), the adapter must parse the `Retry-After` or rate-limit reset headers and gracefully sleep or back-off until the limit resets. Do not blindly hammer external APIs.
 *   **`twelve-factor`**: Enforces stateless execution and Graceful Shutdowns. The orchestrator must intercept `SIGINT`/`SIGTERM` to safely close active agent sub-processes.
 *   **`api-design`**: Enforces strict REST semantics and standardized RFC 9457 error shapes across all FastAPI endpoints.
 *   **OpenAPI Autogeneration (`openapi-typescript`)**: Enforces 100% type safety across the frontend/backend boundary. Instead of brittle, manual interface definitions, the React frontend must generate its schemas directly from FastAPI's `/openapi.json` to prevent schema drift and catch API contract breakages at compile-time.
