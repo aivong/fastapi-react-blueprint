@@ -91,6 +91,10 @@ We aggressively shift left to eliminate manual testing, employing a 5-tier pyram
 
 *Note on Playwright*: Write an E2E smoke test *immediately* after wiring up the frontend-to-backend proxy to catch fundamental Docker networking issues. Use `.toHaveScreenshot()` with dynamic masks for Visual Regression Testing (VRT).
 
+### Continuous Integration & Testing Economics
+*   **Dual-Path Testing Loop**: Long-running integration tests (like Testcontainers) are invaluable for strict, clean-room validation, but they severely bottleneck developer velocity. You MUST establish a Dual-Path workflow: default to testing against a hot, persistent local database (`USE_LOCAL_DB=1` via `make test`) for rapid local TDD feedback loops. Reserve the slow, clean-room Testcontainers suite exclusively for CI pipelines and ad-hoc verifications prior to pushing.
+*   **CI Redundancy Elimination**: CI pipelines must be aggressively optimized to conserve compute minutes. The heavy E2E test suite should be configured to run **ONLY** on Pull Requests (`on: pull_request`). Never trigger the test suite on `push` to the `main` branch, as any commit landing on `main` has already mathematically proven its correctness during the PR gate.
+
 ### Documentation & Demonstration
 *   **`excalidraw-diagram`**: Used to generate isomorphic visual arguments (system architecture diagrams) that are saved directly to version control.
 *   **`remotion-best-practices`**: Used at the very end of the project to programmatically generate a highly polished demo MP4 video of the application in action without using CSS animations.
