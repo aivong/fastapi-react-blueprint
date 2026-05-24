@@ -82,10 +82,10 @@ We have aggressively integrated specialized skills to enforce a titanium-clad co
 We aggressively shift left to eliminate manual testing, employing a 5-tier pyramid:
 
 1. **Tier 0: Static Analysis (Pre-Test)**: Use Astral's `ty` to catch type mismatches and `ruff` to catch logical flaws before tests even execute.
-2. **Tier 1: Unit & Mutation Tests**: Write fast, isolated tests for Domain logic using strict TDD. Crucially, run **Mutation Testing (`mutmut`)** against this tier to prove the test suite actually catches injected bugs. (Note: use relative/direct imports `from models import Issue` rather than `src.models` to prevent `mutmut` namespace bugs).
+2. **Tier 1: Unit & Mutation Tests**: Write fast, isolated tests for Domain logic using strict TDD. Crucially, run **Mutation Testing (`mutmut`)** against this tier to prove the test suite actually catches injected bugs.
 3. **Tier 2: Contract Tests (Schema Validation)**: Never guess if an external API changed. For GraphQL APIs, extract queries into shared `.graphql` files (treated as immutable source code, never Application State) and use the frontend's `@graphql-codegen/cli` to validate them against the live production schema during CI.
 4. **Tier 3: Component Integration (Testcontainers & Fakes)**: Test infrastructure adapters using real backing services. Use `testcontainers-python` to spin up ephemeral PostgreSQL databases. 
-    *   *Virtualization Tolerance*: When writing asynchronous polling loops backed by Testcontainers (especially on Windows/macOS Docker Desktop VMs), always configure generous timeouts (e.g., 20.0s). The initial TCP handshake through the VM NAT bridge often experiences 5-10 second connection delays that will flake brittle timeouts.
+    *   *Virtualization Tolerance*: When writing asynchronous polling loops or network assertions against containerized services, always design with generous timeouts to tolerate underlying hypervisor or network-bridge latency.
     *   *Fakes over Mocks*: For external APIs, **build Fakes instead of Mocks** using `respx`. Fakes maintain in-memory state dictionaries and test the *behavior* of the orchestrator, unlike brittle mocks that only assert `called_with()`.
 5. **Tier 4: Automated E2E System Tests**: Programmatically execute the entire orchestrator loop and mathematically assert the outcomes (e.g., executing the agent's generated code via `subprocess` to prove it runs) to completely eliminate manual UI verification.
 
