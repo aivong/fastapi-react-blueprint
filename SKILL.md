@@ -51,7 +51,9 @@ We have aggressively integrated specialized skills to enforce a titanium-clad co
 *   **`karpathy-guidelines`**: **Simplicity First** and **Surgical Changes**. We write the absolute minimum code required to solve the problem. Zero speculative features. We only touch the code we must touch.
 
 ### Security & Secrets
-*   **Supply Chain Security & Freshness**: All dependencies in `pyproject.toml` and `package.json` MUST be pinned to exact versions (e.g., `fastapi==0.136.1` instead of `>=`). Lockfiles (`uv.lock`, `package-lock.json`) MUST be committed to version control to eliminate vector supply chain attacks. Additionally, you must default to using the **latest stable major version** of all backing services (e.g., Node.js LTS, PostgreSQL 18) unless explicitly constrained by the user.
+*   **Supply Chain Security & Freshness**: All dependencies in `pyproject.toml` and `package.json` MUST be pinned to exact versions (e.g., `fastapi==0.136.1` instead of `>=`). Lockfiles (`uv.lock`, `package-lock.json`) MUST be committed to version control to eliminate vector supply chain attacks. Additionally:
+    *   You must default to using the **latest stable major version** of all backing services (e.g., Node.js LTS, PostgreSQL 18) unless explicitly constrained by the user.
+    *   **TypeScript Version Alignment**: By default, always pick the latest stable TypeScript version officially supported by the installed ESLint toolchain (specifically `@typescript-eslint` parser/plugins) to ensure native peer dependency alignment and robust, zero-warnings linting. Only upgrade to a newer, unsupported version of TypeScript if experimental language features are explicitly required by the project.
 *   **Minimal Attack Surfaces**: Always use `slim` or `alpine` variants for Docker base images (e.g., `python:3.12-slim`, `postgres:17-alpine`) to minimize footprint and reduce vulnerability exposure.
 *   **`owasp-secure-coding`**: Security is built-in by default (preventing XSS, Injection, SSRF) before code ever reaches production.
 *   **`varlock`**: Strict secret management. API keys (`LINEAR_API_KEY`) are injected via `.env` files and never logged or hardcoded.
