@@ -91,7 +91,7 @@ We aggressively shift left to eliminate manual testing, employing a 5-tier pyram
     *   *Fakes over Mocks*: For external APIs, **build Fakes instead of Mocks** using `respx`. Fakes maintain in-memory state dictionaries and test the *behavior* of the orchestrator, unlike brittle mocks that only assert `called_with()`.
 5. **Tier 4: Automated E2E System Tests**: Programmatically execute the entire orchestrator loop and mathematically assert the outcomes (e.g., executing the agent's generated code via `subprocess` to prove it runs) to completely eliminate manual UI verification.
 
-*Note on Playwright*: Write an E2E smoke test *immediately* after wiring up the frontend-to-backend proxy to catch fundamental Docker networking issues. Use `.toHaveScreenshot()` with dynamic masks for Visual Regression Testing (VRT).
+*Note on Playwright* (`front-end-testing` & `webapp-testing`): Playwright is used for end-to-end frontend integration tests that aren't brittle. Write an E2E smoke test *immediately* after wiring up the frontend-to-backend proxy to catch fundamental Docker networking issues. Use `.toHaveScreenshot()` with dynamic masks for Visual Regression Testing (VRT).
 
 ### Continuous Integration & Testing Economics
 *   **Dual-Path Testing Loop**: Long-running integration tests (like Testcontainers) are invaluable for strict, clean-room validation, but they severely bottleneck developer velocity. You MUST establish a Dual-Path workflow using Pytest markers. Apply `@pytest.mark.integration` to all tests requiring a database. Developers should default to running pure unit tests locally (`pytest -m "not integration"`) for instant feedback. The slow, clean-room Testcontainers suite (`pytest`) is reserved for CI pipelines and explicit ad-hoc verifications.
