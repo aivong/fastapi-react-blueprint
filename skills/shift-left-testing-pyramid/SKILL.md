@@ -78,7 +78,7 @@ Test infrastructure adapters against real backing services.
 **Principles:**
 * Use ephemeral containers (e.g., Testcontainers) to spin up real databases, message brokers, and caches. No shared test databases.
 * **Virtualization tolerance**: When asserting against containerized services (especially on Windows/macOS using Docker Desktop VMs), design with generous timeouts (e.g., 10-20 seconds) to tolerate VM NAT bridge and hypervisor network latency. The initial TCP handshake through a virtualized bridge often encounters 5-10 second delays. Flaky ≠ slow — a timeout that works instantly on native Linux bare-metal will flake under local OS virtualization.
-* **Fakes over mocks**: For external APIs, build stateful fakes that maintain in-memory state and test the *behavior* of your integration and application logic. Mocks that only assert `called_with()` prove nothing about correctness.
+* **Fakes over mocks**: For external dependencies, write stateful Fakes that implement the same port/interface as your production adapter but maintain in-memory state (such as dictionaries or lists). Test against this interface to verify application behavior, rather than using brittle mocks that only assert `called_with()` or return hardcoded values.
 * Each integration test is idempotent — creates its own state, cleans up after itself, runs in any order.
 
 ---

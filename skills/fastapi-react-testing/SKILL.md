@@ -46,7 +46,7 @@ This skill maps each tier of the [shift-left-testing-pyramid](../shift-left-test
 
 * **Databases**: `testcontainers-python` to spin up ephemeral PostgreSQL instances. Zero shared state between tests.
 * **Virtualization tolerance**: When writing async polling loops or TCP assertions against Testcontainers, always configure generous timeouts (e.g., 20 seconds). When running Docker Desktop VMs on Windows or macOS, the initial TCP handshake through the VM NAT bridge often encounters 5-10 second connection delays that will flake brittle timeouts.
-* **External API fakes**: Build fakes with `respx` — maintain in-memory state dictionaries, test integration and application behavior. No brittle `assert_called_with()` mocks.
+* **External API fakes**: Build stateful Fakes (using Python Protocols or Abstract Base Classes) that implement the same interface as your production client but maintain in-memory state. Use tools like `respx` only to mock the network layer for libraries where subclassing/port implementation isn't viable. Avoid brittle `assert_called_with()` mocks.
 
 ---
 
