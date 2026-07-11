@@ -45,7 +45,6 @@ This skill maps each tier of the [shift-left-testing-pyramid](../shift-left-test
 ## Tier 3: Component Integration → Testcontainers & Fakes
 
 * **Databases**: `testcontainers-python` to spin up ephemeral PostgreSQL instances. Zero shared state between tests.
-* **Virtualization tolerance**: When writing async polling loops or TCP assertions against Testcontainers, always configure generous timeouts (e.g., 20 seconds). When running Docker Desktop VMs on Windows or macOS, the initial TCP handshake through the VM NAT bridge often encounters 5-10 second connection delays that will flake brittle timeouts.
 * **External API fakes**: Use the appropriate boundary for your stateful fakes:
     *   **Port-level Fakes**: Write an in-memory class implementing the same Python `Protocol` or `abc.ABC` as your production adapter (e.g. an in-memory repository or local file system double).
     *   **Network-level Fakes**: Intercept network requests using `respx` fakes to return mock HTTP responses. This keeps the actual production HTTP client in the test loop, verifying request payload serialization, URL structure, and header formatting. Avoid brittle `assert_called_with()` mocks.
@@ -139,6 +138,10 @@ If your FastAPI & React application coordinates background workers, spawns child
 *   **The Problem**: Running mutation tests that trigger Testcontainers from inside a Dockerized CI/CD container fails because the test container cannot talk to the host's Docker daemon.
 *   **The Fix**: Mount the host Docker socket (`-v /var/run/docker.sock:/var/run/docker.sock`) into your CI/CD runner container.
  
+#### Virtualization Tolerance Gotcha (Windows/macOS)
+*   **The Problem**: When running integration tests that invoke `testcontainers-python` on developer laptops (which run Docker Desktop in virtualized VM environments), TCP socket connections occasionally fail or timeout. The VM NAT bridge layer introduces heavy context-switching latency during initial handshakes.
+*   **The Fix**: Configure generous timeouts (e.g., 20 seconds) in your async polling loops or TCP client handshakes to tolerate VM network latency. A 2-second timeout that runs instantly on native Linux CI machines will flake under local OS virtualization.
+
 #### Child Process Observability & Buffer Flushing
 *   **The Problem**: A background subprocess or worker spawned by `subprocess.Popen` crashes, producing a 0-byte log file. This happens because Python buffers stdout/stderr, and a hard crash prevents the buffer from flushing.
 *   **The Fix**:

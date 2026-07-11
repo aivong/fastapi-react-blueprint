@@ -76,7 +76,6 @@ Test infrastructure adapters against real backing services.
 
 **Principles:**
 * Use ephemeral containers (e.g., Testcontainers) to spin up real databases, message brokers, and caches. No shared test databases.
-* **Virtualization tolerance**: When asserting against containerized services (especially on Windows/macOS using Docker Desktop VMs), design with generous timeouts (e.g., 10-20 seconds) to tolerate VM NAT bridge and hypervisor network latency. The initial TCP handshake through a virtualized bridge often encounters 5-10 second delays. Flaky ≠ slow — a timeout that works instantly on native Linux bare-metal will flake under local OS virtualization.
 * **Fakes over mocks**: For external dependencies, write stateful Fakes that simulate real behavior instead of returning hardcoded values. Choose the right boundary for the Fake:
     *   **Port-level Fakes**: Swap the adapter class with an in-memory implementation of the same interface/port (e.g., in-memory repository for a database). Ideal for decoupled internal services.
     *   **Network-level Fakes**: Intercept network requests using tools like MSW (JS) or `respx` (Python) to return mock HTTP payloads. Ideal for third-party HTTP APIs because it keeps your real network client code in the loop, validating request serialization and error parsing.
@@ -227,6 +226,11 @@ If your application uses specific architectural patterns (such as generating fil
 ---
 
 ### Tier 3: Component Integration Sub-types (Ephemerals & Fakes)
+
+#### Virtualization Tolerance Testing
+*   **Capability**: Containerized Databases/Services in Virtualized Local Environments (e.g., Docker Desktop VMs on Windows/macOS).
+*   **Symptom**: Integration tests pass consistently on bare-metal Linux (like standard CI runners) but randomly fail/flake on developer laptops running Windows or macOS.
+*   **Test Pattern**: When asserting or polling against containerized services (Testcontainers), enforce generous connection and read timeouts (e.g., 15-20 seconds). Do not hardcode short timeouts (like 2 seconds) that assume native performance, as the initial TCP handshake through the VM NAT bridge often encounters 5-10 second hypervisor routing delays.
 
 #### Chaos & Fault Injection Testing (Advanced Fakes)
 *   **Capability**: Fragile or Rate-Limited External APIs (Payment gateways, LLM endpoints, OAuth providers).
