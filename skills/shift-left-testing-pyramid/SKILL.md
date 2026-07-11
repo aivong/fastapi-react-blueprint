@@ -174,7 +174,7 @@ Use these examples to diagnose which tier to invest in when a bug escapes.
 
 **Symptom**: Third-party API calls succeed in tests but fail in production with 429 Too Many Requests.
 **Root cause**: Tests mock the API with `unittest.mock`, which always returns 200. Production hits the rate limit.
-**What to add**: A stateful fake that tracks call count and returns 429 after the limit. Tests the retry/backoff behavior of your orchestrator.
+**What to add**: A stateful fake that tracks call count and returns 429 after the limit. Tests the retry/backoff behavior of your integration client.
 
 ---
 
@@ -232,7 +232,7 @@ If your application uses specific architectural patterns (such as generating fil
 #### Chaos & Fault Injection Testing (Advanced Fakes)
 *   **Capability**: Fragile or Rate-Limited External APIs (Payment gateways, LLM endpoints, OAuth providers).
 *   **Symptom**: Upstream 502/504/timeout errors crash the main work loop midway or lead to infinite retry loops.
-*   **Test Pattern**: Use stateful fakes to simulate catastrophic external API failures (e.g. return 504 Gateway Timeout) and assert your orchestrator degrades gracefully (retries with backoff, saves current state, returns a clean error).
+*   **Test Pattern**: Use stateful fakes to simulate catastrophic external API failures (e.g. return 504 Gateway Timeout) and assert your application logic degrades gracefully (retries with backoff, saves current state, returns a clean error).
 
 #### Background Worker & Subprocess Observability Testing
 *   **Capability**: Background Tasks, Subprocess Management, or Sandbox Runtimes.
