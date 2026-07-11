@@ -66,6 +66,7 @@ Never guess whether an external API changed. Validate schemas at build time.
 **Principles:**
 * **Consumer-driven contracts**: The consumer defines what it needs; the producer validates it can still serve that contract.
 * **Schema-first**: Generate client types from the API schema (OpenAPI, GraphQL SDL, Protobuf). Drift between client and server is caught at compile time, not in production.
+* **Frontend-backend type safety**: The frontend must generate its types directly from the backend's API schema. Never maintain handwritten interface definitions that can drift — schema changes that break the frontend should fail the build, not surface in production.
 * Shared schema files are treated as immutable source code — versioned, reviewed, never auto-generated from application state.
 * Contract tests run in CI on every PR — they are fast (no runtime services needed) and should block merge on failure.
 
