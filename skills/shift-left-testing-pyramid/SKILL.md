@@ -32,7 +32,7 @@ Shift validation left in the development cycle — catch bugs at the cheapest ti
             └───────────┘
 ```
 
-For implementation-level test patterns (factories, behavior-driven assertions, public-API testing), load the [testing](file:///C:/Users/aivon/.gemini/config/skills/testing/SKILL.md) skill. For TDD workflow, load the [tdd](file:///C:/Users/aivon/.gemini/config/skills/tdd/SKILL.md) skill.
+For implementation-level test patterns (factories, behavior-driven assertions, public-API testing), load the [testing](../testing/SKILL.md) skill. For TDD workflow, load the [tdd](../tdd/SKILL.md) skill.
 
 ---
 
@@ -52,9 +52,9 @@ Run type checkers and linters **before** any test suite executes. These catch en
 Fast, isolated tests for core domain logic. No I/O, no network, no database.
 
 **Principles:**
-* Write tests using strict Test-Driven Development (load [tdd](file:///C:/Users/aivon/.gemini/config/skills/tdd/SKILL.md) skill).
-* Test behavior through public APIs, not implementation details (load [testing](file:///C:/Users/aivon/.gemini/config/skills/testing/SKILL.md) skill).
-* Run mutation testing against domain code to prove tests catch injected bugs — coverage alone is not proof of effectiveness (load [mutation-testing](file:///C:/Users/aivon/.gemini/config/skills/mutation-testing/SKILL.md) skill).
+* Write tests using strict Test-Driven Development (load [tdd](../tdd/SKILL.md) skill).
+* Test behavior through public APIs, not implementation details (load [testing](../testing/SKILL.md) skill).
+* Run mutation testing against domain code to prove tests catch injected bugs — coverage alone is not proof of effectiveness (load [mutation-testing](../mutation-testing/SKILL.md) skill).
 * Target: domain logic at >90% mutation score.
 
 ---
@@ -91,7 +91,7 @@ Full-stack smoke tests that prove the system works end-to-end. Keep these thin �
 
 **Principles:**
 * Write an E2E smoke test immediately after wiring up a new integration boundary (e.g., frontend-to-backend proxy, API gateway, or local dev server proxy/CORS settings) to catch fundamental connectivity, routing, or configuration issues early.
-* Use browser automation for UI smoke tests. Query by accessible roles and text, not CSS selectors (load [webapp-testing](file:///C:/Users/aivon/.gemini/config/skills/webapp-testing/SKILL.md) skill).
+* Use browser automation for UI smoke tests. Query by accessible roles and text, not CSS selectors (load [webapp-testing](../webapp-testing/SKILL.md) skill).
 * **Visual Regression Testing (VRT)**: Screenshot comparison to assert visual styling stability. Use dynamic masks for non-deterministic content (timestamps, avatars).
 * Programmatic E2E: For non-UI systems (such as REST APIs, data pipelines, queue workers, or CLI tools), execute the complete system flow programmatically and assert end-state correctness (e.g., trigger an API request and assert downstream database records, or run a CLI command and verify files are created correctly).
 

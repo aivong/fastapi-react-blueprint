@@ -30,8 +30,8 @@ This skill maps each tier of the [shift-left-testing-pyramid](../shift-left-test
 
 ## Tier 1: Unit & Mutation Tests
 
-* **Backend**: `pytest` for domain logic. Follow TDD (load [tdd](file:///C:/Users/aivon/.gemini/config/skills/tdd/SKILL.md) skill). Run `mutmut` against domain modules to prove test effectiveness.
-* **Frontend**: Vitest Browser Mode (preferred) or DOM Testing Library for behavior-driven UI tests (load [front-end-testing](file:///C:/Users/aivon/.gemini/config/skills/front-end-testing/SKILL.md) skill).
+* **Backend**: `pytest` for domain logic. Follow TDD (load [tdd](../tdd/SKILL.md) skill). Run `mutmut` against domain modules to prove test effectiveness.
+* **Frontend**: Vitest Browser Mode (preferred) or DOM Testing Library for behavior-driven UI tests (load [front-end-testing](../front-end-testing/SKILL.md) skill).
 
 ---
 
@@ -55,7 +55,7 @@ This skill maps each tier of the [shift-left-testing-pyramid](../shift-left-test
 ## Tier 4: Automated E2E → Playwright
 
 * **Smoke tests**: Write an E2E smoke test immediately after wiring up the frontend-to-backend connection (such as local dev server proxies or Docker networking boundaries) to catch localhost CORS errors or container routing mismatches early.
-* **Browser automation**: Playwright with accessible selectors (load [webapp-testing](file:///C:/Users/aivon/.gemini/config/skills/webapp-testing/SKILL.md) skill).
+* **Browser automation**: Playwright with accessible selectors (load [webapp-testing](../webapp-testing/SKILL.md) skill).
 * **Visual Regression Testing**: `.toHaveScreenshot()` with dynamic masks for timestamps, avatars, and other non-deterministic content.
 * **Programmatic E2E**: For backend-only flows (such as standalone APIs, daemon processes, or task queues), execute the complete system workflow programmatically and assert end-state outcomes (e.g., trigger real requests to a test server using `httpx` or run a CLI task and verify database/disk state).
 
