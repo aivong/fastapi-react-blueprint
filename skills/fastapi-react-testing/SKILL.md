@@ -18,6 +18,14 @@ dependencies:
 
 This skill maps each tier of the [shift-left-testing-pyramid](../shift-left-testing-pyramid/SKILL.md) to specific FastAPI/React tooling. Load the pyramid skill first for the generic strategy and principles.
 
+### How to use this skill
+
+| Your situation | Start here |
+|---|---|
+| **"I'm about to merge a PR. What tests should I run?"** | Jump to the **PR Coverage Checklist: FastAPI & React**. Find the row matching your change and verify the listed tools. |
+| **"A bug escaped to production. What tool should have caught it?"** | Jump to the **Bug Triage: FastAPI/React Examples**. Match the symptom to a tier and tool. |
+| **"I'm setting up testing for a FastAPI/React project."** | Read the **Tier tool mappings** (0–4) top to bottom, then the **Gotchas** section. |
+
 ---
 
 ## Tier 0: Static Analysis → Astral Tooling
@@ -57,6 +65,26 @@ This skill maps each tier of the [shift-left-testing-pyramid](../shift-left-test
 * **Browser automation**: Playwright with accessible selectors (querying by role/text; load the optional [webapp-testing](../webapp-testing/SKILL.md) skill if available).
 * **Visual Regression Testing**: `.toHaveScreenshot()` with dynamic masks for timestamps, avatars, and other non-deterministic content.
 * **Programmatic E2E**: For backend-only flows (such as standalone APIs, daemon processes, or task queues), execute the complete system workflow programmatically and assert end-state outcomes (e.g., trigger real requests to a test server using `httpx` or run a CLI task and verify database/disk state).
+
+---
+
+## PR Coverage Checklist: FastAPI & React
+
+*"I'm about to merge this PR. What tests should I run?"*
+
+Find the row matching your change, then verify you have the listed coverage. See the [generic pyramid checklist](../shift-left-testing-pyramid/SKILL.md) for the full tier-by-tier rationale.
+
+| What your PR changes | What to run / add |
+|---|---|
+| **SQLAlchemy model or query** | `ty` on model nullability. `testcontainers-python` integration test against real PostgreSQL. Regenerate frontend types with `openapi-typescript` if the model backs an API response. |
+| **FastAPI endpoint** | `ty` + `ruff` on request/response schemas. `pytest` unit test for domain logic. `openapi-typescript` to regenerate client types. Playwright smoke test for the route. |
+| **Pydantic schema** | `ty` strict check. If schema is in an API response, regenerate frontend types with `openapi-typescript` — compile errors reveal broken consumers. |
+| **External API client** (Stripe, LLM, OAuth) | `pytest` unit test for retry/backoff logic. `respx` network-level fake returning 429/502/504. Chaos fake for gateway timeouts. |
+| **React component or layout** | TypeScript strict (`noUncheckedIndexedAccess`). Vitest Browser Mode behavioral test. Playwright `.toHaveScreenshot()` at desktop (1280×720) and mobile (375×667) viewports. |
+| **React form** | Vitest Browser test for edge cases (empty submit, max-length, special chars). Playwright E2E: fill form → submit → assert backend received correct payload. |
+| **Auth flow** (login, roles, tokens) | `pytest` unit test for permission checks. Integration test with fake auth provider. Playwright E2E: verify redirect on protected route, cookie isolation across pages. |
+| **Background task or Celery/worker** | `pytest` unit test for task logic. Assert `PYTHONUNBUFFERED=1` or explicit `flush()` in worker scripts. Assert log filenames include unique task ID. |
+| **Docker or deployment config** | Playwright smoke test against the containerized stack. Verify `openapi.json` is served correctly from the running container. |
 
 ---
 

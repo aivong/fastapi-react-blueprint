@@ -34,6 +34,14 @@ Shift validation left in the development cycle — catch bugs at the cheapest ti
 
 This strategy relies on Test-Driven Development (TDD), behavioral assertion patterns, and mutation testing to guarantee correctness. If additional guidance is available in your workspace, you can load the [testing](../testing/SKILL.md) and [tdd](../tdd/SKILL.md) skills.
 
+### How to use this skill
+
+| Your situation | Start here |
+|---|---|
+| **"I'm about to merge a PR. Do I have enough tests?"** | Jump to the **PR Coverage Checklist**. Find the row matching what your PR changes and verify you have the listed coverage. |
+| **"A bug escaped to production. How do I prevent it next time?"** | Jump to the **Bug Triage Guide**. Match the symptom to a tier and add the missing test type. |
+| **"I'm setting up testing for a new project."** | Read the **Tier definitions** (0–4) top to bottom, then the **Anti-Patterns** table. |
+
 ---
 
 ## Tier 0: Static Analysis (Pre-Test)
@@ -117,6 +125,25 @@ When deciding what kind of test to write:
 3. **Does it talk to a database, cache, or queue?** → Tier 3 (integration test with container)
 4. **Does it need the full system running?** → Tier 4 (E2E smoke test)
 5. **Always**: Tier 0 runs before everything else
+
+---
+
+## PR Coverage Checklist
+
+*"I'm about to merge this PR. What types of tests should I have?"*
+
+Use this checklist to identify missing test coverage before merging. Find the row that matches what your PR changes, then verify you have tests at each listed tier.
+
+| What your PR changes | Tier 0 | Tier 1 | Tier 2 | Tier 3 | Tier 4 |
+|---|---|---|---|---|---|
+| **Database query or schema** | Type-check nullability and column types | — | Regenerate frontend types from updated schema | Run against a real database container (catch dialect differences like `ILIKE` vs `LIKE`) | — |
+| **New or modified API endpoint** | Strict return types, validate request/response models | Unit test domain logic the endpoint calls | Regenerate client types; verify contract is not broken | — | Smoke test the route end-to-end |
+| **External API integration** (payment, LLM, OAuth) | — | Unit test retry/backoff/timeout logic | — | Network-level fake returning error codes (429, 502, 504). Chaos fake for timeouts | — |
+| **UI component or layout** | Strict prop types (no implicit `any`) | Behavioral test (render, interact, assert output) | — | — | VRT screenshot (desktop + mobile viewports) |
+| **Form or user input** | — | Validate edge cases (empty, too long, special chars, boundary values) | — | — | E2E test: submit form, verify server received correct data |
+| **Authentication or authorization** | — | Unit test permission logic and role checks | — | Integration test against real auth provider or fake | E2E: verify protected routes redirect, cookie/session isolation |
+| **Background task or worker** | — | Unit test task logic in isolation | — | Subprocess observability (log flush, stderr capture, unique log IDs) | — |
+| **Configuration or environment** | — | Composition root test (verify correct adapters resolve) | — | — | Smoke test with production-like config |
 
 ---
 
