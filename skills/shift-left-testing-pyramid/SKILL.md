@@ -91,7 +91,7 @@ Full-stack smoke tests that prove the system works end-to-end. Keep these thin â
 * Write an E2E smoke test immediately after wiring up a new integration boundary (e.g., frontend-to-backend proxy, API gateway, or local dev server proxy/CORS settings) to catch fundamental connectivity, routing, or configuration issues early.
 * Use browser automation for UI smoke tests. Query by accessible roles and text, not CSS selectors (load `webapp-testing` skill).
 * **Visual Regression Testing (VRT)**: Screenshot comparison to assert visual styling stability. Use dynamic masks for non-deterministic content (timestamps, avatars).
-* Programmatic E2E: For non-UI systems, execute the full workflow programmatically and assert outcomes mathematically (e.g., run generated code via subprocess, assert exit code and output).
+* Programmatic E2E: For non-UI systems (such as REST APIs, data pipelines, queue workers, or CLI tools), execute the complete system flow programmatically and assert end-state correctness (e.g., trigger an API request and assert downstream database records, or run a CLI command and verify files are created correctly).
 
 ---
 
