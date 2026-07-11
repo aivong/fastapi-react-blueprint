@@ -10,7 +10,6 @@ tags:
   - fakes
 dependencies:
   - shift-left-testing-pyramid
-  - karpathy-guidelines
   - front-end-testing
   - webapp-testing
 ---
