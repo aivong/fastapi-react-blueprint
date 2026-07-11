@@ -201,26 +201,26 @@ Use these examples to diagnose which tier to invest in when a bug escapes.
 | Visual/CSS regression | **Tier 4** | Screenshot comparison (VRT) |
 
 ---
+ 
+## Specialized Testing for Advanced Architectural Capabilities
 
-## Specialized Testing for Agentic & Orchestrator Applications
-
-If your application acts as an agent orchestrator, manages dynamic task lifecycles, spawns child subprocesses/containers, or dynamically generates files/code artifacts (e.g., projects like Symphony or OpenHands), you face unique failure modes. Add these specialized sub-types to your testing strategy:
+If your application uses specific architectural patterns (such as generating files, managing background processes, utilizing complex dependency injection, or orchestrating multi-step workflows), standard tests at each tier might miss critical edge cases. Implement these specialized sub-types depending on your app's capabilities (which are common in compilers, video processors, queue workers, and agentic orchestrators):
 
 ### Tier 1: Unit & Mutation Sub-types (No I/O)
 
 #### Stale Cache Invalidation Testing
-*   **When to use**: Your app dynamically generates code, scripts, or configuration files to the disk.
+*   **Capability**: Code/File Generation, Templating, Static Site Generation, or Compilers.
 *   **Symptom**: Clean-slate CI/CD test runs pass, but developers/users experience stale caching regressions locally because previous outputs are not overwritten.
 *   **Test Pattern**: In your unit test, proactively seed the output directory with a "stale garbage" file, run the generator, and assert that the stale garbage was completely overwritten or cleaned.
 
 #### Resource Cleanup & Disk Leak Testing
-*   **When to use**: Your app creates temporary files, workspaces, or session data directories.
+*   **Capability**: Temporary File Workspaces, File Uploads, or Session Data Directories.
 *   **Symptom**: Disk space leaks over time on the server, especially when runs fail or throw exceptions mid-way, bypassing standard cleanup blocks.
-*   **Test Pattern**: Force an exception/failure in the middle of the agent's work loop and assert that cleanup blocks (`try...finally`) still execute and delete all temporary files/directories.
+*   **Test Pattern**: Force an exception/failure in the middle of the work loop and assert that cleanup blocks (`try...finally`) still execute and delete all temporary files/directories.
 
 #### Composition Root Testing
-*   **When to use**: Your app dynamically resolves prompting templates, tool adapters, or LLM clients via dependency injection.
-*   **Symptom**: Production boots up but silently resolves the wrong concrete adapter (e.g., using a mock or fallback model in prod).
+*   **Capability**: Multi-Adapter Configurations or Dependency Injection (DI) Resolvers.
+*   **Symptom**: Production boots up but silently resolves the wrong concrete adapter (e.g., using a mock or fallback service in prod).
 *   **Test Pattern**: Write unit tests that instantiate the composition root/resolver and assert that it correctly resolves to the expected production types.
 
 ---
@@ -228,12 +228,12 @@ If your application acts as an agent orchestrator, manages dynamic task lifecycl
 ### Tier 3: Component Integration Sub-types (Ephemerals & Fakes)
 
 #### Chaos & Fault Injection Testing (Advanced Fakes)
-*   **When to use**: Your orchestrator manages multi-step execution flows depending on fragile third-party APIs (LLM endpoints, external workspaces, APIs).
-*   **Symptom**: Upstream 502/504/timeout errors crash the agent loop midway or lead to infinite retry loops.
+*   **Capability**: Fragile or Rate-Limited External APIs (Payment gateways, LLM endpoints, OAuth providers).
+*   **Symptom**: Upstream 502/504/timeout errors crash the main work loop midway or lead to infinite retry loops.
 *   **Test Pattern**: Use stateful fakes to simulate catastrophic external API failures (e.g. return 504 Gateway Timeout) and assert your orchestrator degrades gracefully (retries with backoff, saves current state, returns a clean error).
 
 #### Background Worker & Subprocess Observability Testing
-*   **When to use**: Your orchestrator spawns background processes, workers, or containerized execution sandboxes.
+*   **Capability**: Background Tasks, Subprocess Management, or Sandbox Runtimes.
 *   **Symptom**: Child tasks crash silently with impossible-to-debug 0-byte log files (due to unflushed IO buffers) or log files are overwritten by concurrent test/task runs.
 *   **Test Pattern**:
     *   **Isolate Logs**: Assert that every process/session log filename includes a UUID or unique task ID to prevent collisions.
@@ -242,18 +242,19 @@ If your application acts as an agent orchestrator, manages dynamic task lifecycl
 
 ---
 
-### Bug Triage: Orchestration/Agentic Examples
+### Bug Triage: Advanced Capability Examples (Workers, Cache, Cleanups)
 
 #### Symptom: A background task crashes silently, but its log file is empty (0 bytes).
 *   **Root cause**: The child script crashed before its file buffer was flushed or closed.
 *   **Tier to add**: **Tier 3 (Subprocess Observability)**. Ensure the script calls `flush()` immediately after critical writes, or use unbuffered output logging.
 
-#### Symptom: The agent loop crashes when the LLM provider experiences a brief 502/504 gateway timeout.
-*   **Root cause**: Missing retry/graceful degradation logic in the LLM connector.
-*   **Tier to add**: **Tier 3 (Fault Injection)**. Use a fake LLM provider in tests to return a 504, and assert the loop retries or pauses rather than crashing.
+#### Symptom: The system crashes when an integration API experiences a brief 502/504 gateway timeout.
+*   **Root cause**: Missing retry/graceful degradation logic in the API client connector.
+*   **Tier to add**: **Tier 3 (Fault Injection)**. Use a fake provider in tests to return a 504, and assert the work loop retries or pauses rather than crashing.
 
-#### Symptom: Workspace files from previous runs leak disk space.
+#### Symptom: Workspace/temp files from previous runs leak disk space.
 *   **Root cause**: Cleanup code is skipped on unhandled exceptions.
 *   **Tier to add**: **Tier 1 (Resource Cleanup)**. Write a test that triggers an exception mid-run and verify the cleanup block still runs.
+
 
 
