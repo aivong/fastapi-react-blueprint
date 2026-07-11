@@ -117,3 +117,86 @@ When deciding what kind of test to write:
 3. **Does it talk to a database, cache, or queue?** → Tier 3 (integration test with container)
 4. **Does it need the full system running?** → Tier 4 (E2E smoke test)
 5. **Always**: Tier 0 runs before everything else
+
+---
+
+## Bug Triage Guide
+
+*"I found this bug in production. What should have caught it?"*
+
+Use these examples to diagnose which tier to invest in when a bug escapes.
+
+---
+
+### Tier 0 would have caught it
+
+**Symptom**: `Cannot read property 'name' of undefined` in production.
+**Root cause**: A function returns `string | undefined` but the caller assumes it always returns `string`. No null check.
+**What to add**: Strict type checking with `strictNullChecks` enabled. The type checker would flag every unguarded access at build time. Zero runtime cost.
+
+**Symptom**: Dead code path silently skipped — a feature flag check uses `=` instead of `==`.
+**Root cause**: Assignment instead of comparison in a conditional.
+**What to add**: A linter rule that flags assignments in conditionals. Caught before tests even run.
+
+---
+
+### Tier 1 would have caught it
+
+**Symptom**: Users charged the wrong amount — discount applied as 15% instead of capping at $50.
+**Root cause**: Business logic uses `price * discount` when it should be `Math.min(price * discount, maxDiscount)`.
+**What to add**: Unit test with a price high enough that `price * discount > maxDiscount`. Mutation testing would have flagged this — removing the `Math.min` call would survive if no test checks the cap.
+
+**Symptom**: Users born on Jan 1 are shown as one year younger than they are.
+**Root cause**: Off-by-one in date comparison — `>` instead of `>=` on the birthday boundary.
+**What to add**: Unit test for the exact boundary value (birthday = today). Mutation testing catches `>=` vs `>` swaps.
+
+---
+
+### Tier 2 would have caught it
+
+**Symptom**: Frontend shows "undefined" where a user's display name should be.
+**Root cause**: Backend renamed the field from `userName` to `displayName` in the API response. Frontend still reads `userName`.
+**What to add**: Generate frontend types from the backend's API schema. The build fails the moment the field name changes — no runtime surprise.
+
+**Symptom**: Frontend form submits successfully but backend returns 422 Unprocessable Entity.
+**Root cause**: Backend added a new required field `phoneNumber` to the request body. Frontend never sends it.
+**What to add**: Schema validation in CI — the generated types would show `phoneNumber` as required, and TypeScript would flag every call site that doesn't provide it.
+
+---
+
+### Tier 3 would have caught it
+
+**Symptom**: Search works in development but returns no results in production.
+**Root cause**: Query uses `ILIKE` (case-insensitive search) which works in PostgreSQL but was tested against an in-memory mock that didn't enforce SQL dialect.
+**What to add**: Integration test against a real database container. The test would either pass with real PostgreSQL behavior or reveal the dialect mismatch.
+
+**Symptom**: Third-party API calls succeed in tests but fail in production with 429 Too Many Requests.
+**Root cause**: Tests mock the API with `unittest.mock`, which always returns 200. Production hits the rate limit.
+**What to add**: A stateful fake that tracks call count and returns 429 after the limit. Tests the retry/backoff behavior of your orchestrator.
+
+---
+
+### Tier 4 would have caught it
+
+**Symptom**: Login works when tested in isolation but fails when navigating from the pricing page.
+**Root cause**: The pricing page sets a cookie that conflicts with the auth flow. No single unit or integration test covers this cross-page interaction.
+**What to add**: E2E smoke test that navigates the full happy path: landing → pricing → login → dashboard.
+
+**Symptom**: "Submit" button is present in the DOM but users can't click it.
+**Root cause**: A CSS z-index issue — a transparent overlay sits on top of the button. All unit and integration tests pass because they don't render real CSS.
+**What to add**: Visual regression test (screenshot comparison) or a Playwright test that actually clicks the button in a real browser.
+
+---
+
+### Quick Reference: Bug → Tier
+
+| Bug you found in prod | Tier that catches it | Type of test to add |
+|---|---|---|
+| Type error, null reference, wrong argument type | **Tier 0** | Strict type checking |
+| Wrong calculation, off-by-one, bad boundary | **Tier 1** | Unit test + mutation testing |
+| Field renamed/added/removed in API | **Tier 2** | Schema-generated types in CI |
+| Query works in mock but not real database | **Tier 3** | Integration test with container |
+| External API rate limit, retry logic broken | **Tier 3** | Stateful fake |
+| Cross-page interaction bug | **Tier 4** | E2E smoke test |
+| Visual/CSS regression | **Tier 4** | Screenshot comparison (VRT) |
+
