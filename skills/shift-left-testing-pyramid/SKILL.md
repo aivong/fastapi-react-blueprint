@@ -227,11 +227,6 @@ If your application uses specific architectural patterns (such as generating fil
 
 ### Tier 3: Component Integration Sub-types (Ephemerals & Fakes)
 
-#### Virtualization Tolerance Testing
-*   **Capability**: Containerized Databases/Services in Virtualized Local Environments (e.g., Docker Desktop VMs on Windows/macOS).
-*   **Symptom**: Integration tests pass consistently on bare-metal Linux (like standard CI runners) but randomly fail/flake on developer laptops running Windows or macOS.
-*   **Test Pattern**: When asserting or polling against containerized services (Testcontainers), enforce generous connection and read timeouts (e.g., 15-20 seconds). Do not hardcode short timeouts (like 2 seconds) that assume native performance, as the initial TCP handshake through the VM NAT bridge often encounters 5-10 second hypervisor routing delays.
-
 #### Chaos & Fault Injection Testing (Advanced Fakes)
 *   **Capability**: Fragile or Rate-Limited External APIs (Payment gateways, LLM endpoints, OAuth providers).
 *   **Symptom**: Upstream 502/504/timeout errors crash the main work loop midway or lead to infinite retry loops.
@@ -244,6 +239,11 @@ If your application uses specific architectural patterns (such as generating fil
     *   **Isolate Logs**: Assert that every process/session log filename includes a UUID or unique task ID to prevent collisions.
     *   **Force Flushes**: Assert that the worker script explicitly calls flush/sync on log writers so crashes don't lose the buffer.
     *   **Never Swallow Stderr**: Avoid piping stderr to null; assert that raw stderr streams are redirected to diagnostic log files.
+
+#### Virtualization Tolerance Testing
+*   **Capability**: Containerized Databases/Services in Virtualized Local Environments (e.g., Docker Desktop VMs on Windows/macOS).
+*   **Symptom**: Integration tests pass consistently on bare-metal Linux (like standard CI runners) but randomly fail/flake on developer laptops running Windows or macOS.
+*   **Test Pattern**: When asserting or polling against containerized services (Testcontainers), enforce generous connection and read timeouts (e.g., 15-20 seconds). Do not hardcode short timeouts (like 2 seconds) that assume native performance, as the initial TCP handshake through the VM NAT bridge often encounters 5-10 second hypervisor routing delays.
 
 ---
 
