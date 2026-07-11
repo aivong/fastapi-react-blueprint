@@ -200,3 +200,60 @@ Use these examples to diagnose which tier to invest in when a bug escapes.
 | Cross-page interaction bug | **Tier 4** | E2E smoke test |
 | Visual/CSS regression | **Tier 4** | Screenshot comparison (VRT) |
 
+---
+
+## Specialized Testing for Agentic & Orchestrator Applications
+
+If your application acts as an agent orchestrator, manages dynamic task lifecycles, spawns child subprocesses/containers, or dynamically generates files/code artifacts (e.g., projects like Symphony or OpenHands), you face unique failure modes. Add these specialized sub-types to your testing strategy:
+
+### Tier 1: Unit & Mutation Sub-types (No I/O)
+
+#### Stale Cache Invalidation Testing
+*   **When to use**: Your app dynamically generates code, scripts, or configuration files to the disk.
+*   **Symptom**: Clean-slate CI/CD test runs pass, but developers/users experience stale caching regressions locally because previous outputs are not overwritten.
+*   **Test Pattern**: In your unit test, proactively seed the output directory with a "stale garbage" file, run the generator, and assert that the stale garbage was completely overwritten or cleaned.
+
+#### Resource Cleanup & Disk Leak Testing
+*   **When to use**: Your app creates temporary files, workspaces, or session data directories.
+*   **Symptom**: Disk space leaks over time on the server, especially when runs fail or throw exceptions mid-way, bypassing standard cleanup blocks.
+*   **Test Pattern**: Force an exception/failure in the middle of the agent's work loop and assert that cleanup blocks (`try...finally`) still execute and delete all temporary files/directories.
+
+#### Composition Root Testing
+*   **When to use**: Your app dynamically resolves prompting templates, tool adapters, or LLM clients via dependency injection.
+*   **Symptom**: Production boots up but silently resolves the wrong concrete adapter (e.g., using a mock or fallback model in prod).
+*   **Test Pattern**: Write unit tests that instantiate the composition root/resolver and assert that it correctly resolves to the expected production types.
+
+---
+
+### Tier 3: Component Integration Sub-types (Ephemerals & Fakes)
+
+#### Chaos & Fault Injection Testing (Advanced Fakes)
+*   **When to use**: Your orchestrator manages multi-step execution flows depending on fragile third-party APIs (LLM endpoints, external workspaces, APIs).
+*   **Symptom**: Upstream 502/504/timeout errors crash the agent loop midway or lead to infinite retry loops.
+*   **Test Pattern**: Use stateful fakes to simulate catastrophic external API failures (e.g. return 504 Gateway Timeout) and assert your orchestrator degrades gracefully (retries with backoff, saves current state, returns a clean error).
+
+#### Background Worker & Subprocess Observability Testing
+*   **When to use**: Your orchestrator spawns background processes, workers, or containerized execution sandboxes.
+*   **Symptom**: Child tasks crash silently with impossible-to-debug 0-byte log files (due to unflushed IO buffers) or log files are overwritten by concurrent test/task runs.
+*   **Test Pattern**:
+    *   **Isolate Logs**: Assert that every process/session log filename includes a UUID or unique task ID to prevent collisions.
+    *   **Force Flushes**: Assert that the worker script explicitly calls flush/sync on log writers so crashes don't lose the buffer.
+    *   **Never Swallow Stderr**: Avoid piping stderr to null; assert that raw stderr streams are redirected to diagnostic log files.
+
+---
+
+### Bug Triage: Orchestration/Agentic Examples
+
+#### Symptom: A background task crashes silently, but its log file is empty (0 bytes).
+*   **Root cause**: The child script crashed before its file buffer was flushed or closed.
+*   **Tier to add**: **Tier 3 (Subprocess Observability)**. Ensure the script calls `flush()` immediately after critical writes, or use unbuffered output logging.
+
+#### Symptom: The agent loop crashes when the LLM provider experiences a brief 502/504 gateway timeout.
+*   **Root cause**: Missing retry/graceful degradation logic in the LLM connector.
+*   **Tier to add**: **Tier 3 (Fault Injection)**. Use a fake LLM provider in tests to return a 504, and assert the loop retries or pauses rather than crashing.
+
+#### Symptom: Workspace files from previous runs leak disk space.
+*   **Root cause**: Cleanup code is skipped on unhandled exceptions.
+*   **Tier to add**: **Tier 1 (Resource Cleanup)**. Write a test that triggers an exception mid-run and verify the cleanup block still runs.
+
+

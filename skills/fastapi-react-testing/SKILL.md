@@ -113,3 +113,57 @@ See the [shift-left-testing-pyramid](../shift-left-testing-pyramid/SKILL.md) Bug
 **Bug**: "Save" button is behind a sticky footer on mobile viewports. Users can't tap it.
 **Fix**: `.toHaveScreenshot()` with a mobile viewport (375×667). VRT diff shows the button is obscured. Or: `page.getByRole('button', { name: /save/i }).click()` throws because Playwright can't click an element covered by another element.
 
+---
+
+## Specialized Testing for Agentic & Orchestrator Applications
+
+If your FastAPI & React application acts as an agent orchestrator, coordinates multi-process tasks, or generates files/code dynamically, implement these stack-specific patterns and avoid these debugging gotchas:
+
+### Tiers 1 & 3: Python & FastAPI Gotchas
+
+#### `respx` + FastAPI `TestClient` Threading Gotcha
+*   **The Problem**: Using FastAPI's synchronous `TestClient` with `respx` fakes causes random mock misses. `TestClient` runs endpoints in separate threads, which breaks the thread-local contextvars used by `respx` to intercept HTTP requests.
+*   **The Fix**: Always write async tests using `httpx.AsyncClient` with `ASGITransport` instead:
+    ```python
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as ac:
+        response = await ac.get("/endpoint")
+    ```
+
+#### `mutmut` + Python Imports Gotcha
+*   **The Problem**: Enforcing mutation testing (`mutmut`) on a codebase using namespace imports (e.g., `from src.models import Issue`) causes `mutmut` to crash or miss mutations due to namespace package compilation bugs.
+*   **The Fix**: Use relative or direct imports (e.g., `from models import Issue`) and append the base `src/` directory to the `PYTHONPATH` when running tests.
+
+#### `mutmut` + Testcontainers in Docker (CI/CD)
+*   **The Problem**: Running mutation tests that trigger Testcontainers from inside a Dockerized CI/CD container fails because the test container cannot talk to the host's Docker daemon.
+*   **The Fix**: Mount the host Docker socket (`-v /var/run/docker.sock:/var/run/docker.sock`) into your CI/CD runner container.
+
+#### Child Process Observability & Buffer Flushing
+*   **The Problem**: A background subprocess or worker spawned by `subprocess.Popen` crashes, producing a 0-byte log file. This happens because Python buffers stdout/stderr, and a hard crash prevents the buffer from flushing.
+*   **The Fix**:
+    1.  Force unbuffered logs by setting the environment variable `PYTHONUNBUFFERED=1` in the subprocess environment.
+    2.  Explicitly call `sys.stdout.flush()` and `sys.stderr.flush()` or `f.flush()` after writing critical diagnostic statements in fragile worker scripts.
+    3.  Redirect `stderr=subprocess.PIPE` or to an active file handler instead of using `subprocess.DEVNULL`.
+
+---
+
+## Bug Triage: FastAPI/React Orchestration Examples
+
+#### Symptom: Subprocess worker crashes silently, producing a 0-byte log file.
+*   **Root cause**: Python buffered the IO stream and the crash prevented file handle closing.
+*   **Fix**: Set `PYTHONUNBUFFERED=1` in the worker environment, or ensure diagnostic logging calls `f.flush()`.
+
+#### Symptom: Upstream LLM gateway timeouts crash the FastAPI background task loop.
+*   **Root cause**: The LLM API client was not wrapped in a resilient retry/backoff mechanism.
+*   **Fix**: Mock the gateway failure using `respx` (returning 502/504) and write an integration test asserting that the background task catches it and retries.
+
+#### Symptom: Temporary workspaces leak files on local dev machines but not in clean CI pipelines.
+*   **Root cause**: Local caching or workspace folders are not cleaned up on execution exceptions.
+*   **Fix**: Wrap file generations in a `try...finally` block. In `pytest`, use the `tmp_path` fixture for automatic OS-level directory lifecycle management:
+    ```python
+    def test_generator(tmp_path):
+        workspace = tmp_path / "workspace"
+        workspace.mkdir()
+        # ... execute and assert ...
+    ```
+
+
