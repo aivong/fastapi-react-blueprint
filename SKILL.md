@@ -10,6 +10,7 @@ tags:
 dependencies:
   - fastapi-react-backend
   - fastapi-react-testing
+  - shift-left-testing-pyramid
   - fastapi-react-ci-cd
   - karpathy-guidelines
   - frontend-design
@@ -46,11 +47,14 @@ graph TD
     Blueprint --> Testing[fastapi-react-testing]
     Blueprint --> CICD[fastapi-react-ci-cd]
     Blueprint --> UI[frontend-design]
+    Testing --> Pyramid[shift-left-testing-pyramid]
     
     classDef main fill:#2a9d8f,color:#fff,stroke:#264653,stroke-width:2px;
     classDef sub fill:#e76f51,color:#fff,stroke:#264653,stroke-width:1px;
+    classDef generic fill:#264653,color:#fff,stroke:#2a9d8f,stroke-width:1px;
     class Blueprint main;
     class Backend,Testing,CICD,UI sub;
+    class Pyramid generic;
 ```
 
 ### Backend Code & Infrastructure
