@@ -32,7 +32,7 @@ Shift validation left in the development cycle — catch bugs at the cheapest ti
             └───────────┘
 ```
 
-For implementation-level test patterns (factories, behavior-driven assertions, public-API testing), load the [testing](../testing/SKILL.md) skill. For TDD workflow, load the [tdd](../tdd/SKILL.md) skill.
+This strategy relies on Test-Driven Development (TDD), behavioral assertion patterns, and mutation testing to guarantee correctness. If additional guidance is available in your workspace, you can load the [testing](../testing/SKILL.md) and [tdd](../tdd/SKILL.md) skills.
 
 ---
 
@@ -52,10 +52,9 @@ Run type checkers and linters **before** any test suite executes. These catch en
 Fast, isolated tests for core domain logic. No I/O, no network, no database.
 
 **Principles:**
-* Write tests using strict Test-Driven Development (load [tdd](../tdd/SKILL.md) skill).
-* Test behavior through public APIs, not implementation details (load [testing](../testing/SKILL.md) skill).
-* Run mutation testing against domain code to prove tests catch injected bugs — coverage alone is not proof of effectiveness (load [mutation-testing](../mutation-testing/SKILL.md) skill).
-* Target: domain logic at >90% mutation score.
+*   **Test-Driven Development (TDD)**: Write tests using strict Red-Green-Refactor cycles (1. Write a failing test first; 2. Write the minimum code required to make it pass; 3. Refactor the code under green). If additional guidance is available, load the [tdd](../tdd/SKILL.md) skill.
+*   **Behavioral Testing**: Assert against public inputs and outputs to test what the code *does*, not *how* it does it. Avoid mocking internal implementation details (private methods, local variables). Use test factories rather than shared test fixtures to set up state cleanly. If additional guidance is available, load the [testing](../testing/SKILL.md) skill.
+*   **Mutation Testing**: Proactively verify your test assertion quality by injecting synthetic bugs (mutants) into your source code. If your test suite still passes after a mutant is injected, the mutant "survived" (indicating a missing assertion). Run mutation tests to target a >90% mutation score. If additional guidance is available, load the [mutation-testing](../mutation-testing/SKILL.md) skill.
 
 ---
 
@@ -91,7 +90,7 @@ Full-stack smoke tests that prove the system works end-to-end. Keep these thin �
 
 **Principles:**
 * Write an E2E smoke test immediately after wiring up a new integration boundary (e.g., frontend-to-backend proxy, API gateway, or local dev server proxy/CORS settings) to catch fundamental connectivity, routing, or configuration issues early.
-* Use browser automation for UI smoke tests. Query by accessible roles and text, not CSS selectors (load [webapp-testing](../webapp-testing/SKILL.md) skill).
+* Use browser automation for UI smoke tests. Always query by user-facing accessible roles and text (e.g., button named 'Submit') rather than implementation details (like CSS selectors or test IDs) to ensure tests don't break during layout refactors. If additional guidance is available, load the [webapp-testing](../webapp-testing/SKILL.md) skill.
 * **Visual Regression Testing (VRT)**: Screenshot comparison to assert visual styling stability. Use dynamic masks for non-deterministic content (timestamps, avatars).
 * Programmatic E2E: For non-UI systems (such as REST APIs, data pipelines, queue workers, or CLI tools), execute the complete system flow programmatically and assert end-state correctness (e.g., trigger an API request and assert downstream database records, or run a CLI command and verify files are created correctly).
 
