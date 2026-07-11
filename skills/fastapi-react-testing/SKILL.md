@@ -52,7 +52,7 @@ This skill maps each tier of the [shift-left-testing-pyramid](../shift-left-test
 
 ## Tier 4: Automated E2E → Playwright
 
-* **Smoke tests**: Write an E2E smoke test immediately after wiring up the frontend-to-backend proxy to catch Docker networking issues.
+* **Smoke tests**: Write an E2E smoke test immediately after wiring up the frontend-to-backend connection (such as local dev server proxies or Docker networking boundaries) to catch localhost CORS errors or container routing mismatches early.
 * **Browser automation**: Playwright with accessible selectors (load `webapp-testing` skill).
 * **Visual Regression Testing**: `.toHaveScreenshot()` with dynamic masks for timestamps, avatars, and other non-deterministic content.
 * **Programmatic E2E**: For backend-only flows, execute the full orchestrator loop and mathematically assert outcomes (e.g., run generated code via `subprocess`, assert exit code and output).
